@@ -66,7 +66,6 @@ export default class Homework1_Scene extends Scene {
 	private ASTEROID_SPEED: number = 100;
 	private ASTEROID_SPEED_INC: number = 10;
 
-	// HOMEWORK 2 - TODO
 	/*
 		You'll want to be sure to load in your own sprite here
 	*/
@@ -83,6 +82,7 @@ export default class Homework1_Scene extends Scene {
 		this.load.image("space", "hw2_assets/sprites/space.png");
 
 		/* ##### YOUR CODE GOES BELOW THIS LINE ##### */
+		this.load.spritesheet("fleet", "hw2_assets/spritesheets/fleet.json");
 	}
 
 	/*
@@ -290,6 +290,7 @@ export default class Homework1_Scene extends Scene {
 			ship.visible = true;
 			ship.position = position;
 			ship.setAIActive(true, {});
+			ship.animation.play(Homework2Animations.SHIP_BOOST);
 
 			this.fleetSize += 1;
 			this.mineralAmount -= 2;
@@ -389,7 +390,6 @@ export default class Homework1_Scene extends Scene {
 		}
 	}
 
-	// HOMEWORK 2 - TODO
 	/**
 	 * Handles all collisions.
 	 * Collisions only occur between:
@@ -450,10 +450,10 @@ export default class Homework1_Scene extends Scene {
 						// Kill asteroid
 						asteroid.visible = false;
 						this.numAsteroids -= 1;
-
+						this.numAsteroidsDestroyed += 1;
 						// Update the gui
 						this.asteroidsLabel.text = `Asteroids: ${this.numAsteroids}`;
-
+						
 						// Send out an event to destroy the ship
 						this.emitter.fireEvent(Homework2Event.SHIP_DAMAGE, {id: ship.id});
 
@@ -474,13 +474,28 @@ export default class Homework1_Scene extends Scene {
 				// If the asteroid is spawned in and it overlaps the player
 				if(asteroid.visible && Homework1_Scene.checkAABBtoCircleCollision(<AABB>this.player.collisionShape, <Circle>asteroid.collisionShape)){
 					// Put your code here:
+					// Kill asteroid
+					asteroid.visible = false;
+					this.numAsteroids -= 1;
 
+					//Lower the Shield
+					this.playerShield -= 1;
+					this.playerinvincible = true;
+
+					//send out an event to damage the player
+					this.emitter.fireEvent(Homework2Event.PLAYER_DAMAGE, {shield:this.playerShield});
+
+					//Update the gui
+					this.asteroidsLabel.text = `Asteroids: ${this.numAsteroids}`; 
+					if(this.playerShield >= 0){
+						this.shieldsLabel.text = `Shield: ${this.playerShield}`;
+					}
+					this.numAsteroidsDestroyed += 1;
 				}
 			}
 		}
 	}
 
-	// HOMEWORK 2 - TODO
 	/**
 	 * This function spawns a new asteroid from our object pool.
 	 * 
@@ -503,9 +518,11 @@ export default class Homework1_Scene extends Scene {
 		}
 
 		if(asteroid !== null){
+			//Pick a random color
+			var colors: Color[] = [Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.RED, Color.YELLOW, Color.BLUE]
+			asteroid.setColor(colors[Math.floor(Math.random() * colors.length)])
 			// Bring this asteroid to life
 			asteroid.visible = true;
-
 			// Extract the size of the viewport
 			let viewportSize = this.viewport.getHalfSize().scaled(2);
 
@@ -526,7 +543,6 @@ export default class Homework1_Scene extends Scene {
 		}
 	}
 
-	// HOMEWORK 2 - TODO
 	/**
 	 * This function takes in a GameNode that may be out of bounds of the viewport and
 	 * modifies its position so that it wraps around the viewport from one side to the other.
@@ -569,10 +585,20 @@ export default class Homework1_Scene extends Scene {
 	 */
 	handleScreenWrap(node: GameNode, viewportCenter: Vec2, paddedViewportSize: Vec2): void {
 		// Your code goes here:
-
+		if(node.position.x > viewportCenter.x + (.5 *paddedViewportSize.x)){
+		    node.position = new Vec2(viewportCenter.x - (.5 * paddedViewportSize.x) , node.position.y);
+		}
+		if(node.position.y > viewportCenter.y + (.5 *paddedViewportSize.y)){
+			node.position = new Vec2(node.position.x, viewportCenter.y  - (.5 * paddedViewportSize.y));
+		}
+		if(node.position.x < viewportCenter.x - (.5 *paddedViewportSize.x)){
+			node.position = new Vec2(viewportCenter.x + (.5 *paddedViewportSize.x), node.position.y);
+		}
+		if(node.position.y < viewportCenter.y - (.5 *paddedViewportSize.y)){
+			node.position = new Vec2(node.position.x, viewportCenter.y + (.5 *paddedViewportSize.y));
+		}
 	}
 
-	// HOMEWORK 2 - TODO
 	/**
 	 * This method checks whether or not an AABB collision shape and a Circle collision shape
 	 * overlap with each other.
@@ -599,7 +625,18 @@ export default class Homework1_Scene extends Scene {
 	 */
 	static checkAABBtoCircleCollision(aabb: AABB, circle: Circle): boolean {
 		// Your code goes here:
-		return false;
-	}
+		const dx = aabb.x - circle.x;
+    	const px = (aabb.getHalfSize().x + circle.halfSize.x) - Math.abs(dx);
+		if (px <= 0) {
+			return false;
+		}
 
+		const dy = aabb.y - circle.y;
+		const py = (aabb.getHalfSize().y + circle.halfSize.y) - Math.abs(dy);
+		if (py <= 0) {
+			return false;
+		}
+
+		return true;
+	}
 }

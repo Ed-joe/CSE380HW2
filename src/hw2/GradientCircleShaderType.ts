@@ -14,7 +14,7 @@ export default class GradientCircleShaderType extends RectShaderType {
 		this.resourceManager.createBuffer(this.bufferObjectKey);
 	}
 
-	// HOMEWORK 2 - TODO
+
 	/**
 	 * You should modify this method to allow you to change the color of the GradientCircles
 	 * 
@@ -39,7 +39,7 @@ export default class GradientCircleShaderType extends RectShaderType {
 		// Get our vertex data
 		const vertexData = this.getVertices(options.size.x, options.size.y);
 		const FSIZE = vertexData.BYTES_PER_ELEMENT;
-
+		
 		// Bind the buffer
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 		gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
@@ -49,9 +49,14 @@ export default class GradientCircleShaderType extends RectShaderType {
 		const a_Position = gl.getAttribLocation(program, "a_Position");
 		gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 2 * FSIZE, 0 * FSIZE);
 		gl.enableVertexAttribArray(a_Position);
+		
 
 		/* ##### UNIFORMS ##### */
-
+		//Color passing
+		const color = gl.getUniformLocation(program, "rand_color");
+		var colorsToArray = options.color.toWebGL();
+		gl.uniform3f(color, colorsToArray[0], colorsToArray[1], colorsToArray[2]);
+		
 		// Get transformation matrix
 		// We have a square for our rendering space, so get the maximum dimension of our quad
 		let maxDimension = Math.max(options.size.x, options.size.y);
@@ -77,7 +82,6 @@ export default class GradientCircleShaderType extends RectShaderType {
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 	}
 
-	// HOMEWORK 2 - TODO
 	/**
 	 * This method decides what options get passed to the above render() method.
 	 * You should modify this class to allow you to change the color of the GradientCircles
@@ -86,7 +90,8 @@ export default class GradientCircleShaderType extends RectShaderType {
 		let options: Record<string, any> = {
 			position: gc.position,
 			size: gc.size,
-			rotation: gc.rotation
+			rotation: gc.rotation,
+			color: gc.color
 		}
 
 		return options;

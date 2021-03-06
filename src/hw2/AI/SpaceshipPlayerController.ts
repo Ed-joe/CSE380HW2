@@ -27,7 +27,6 @@ export default class SpaceshipPlayerController implements AI {
 	private receiver: Receiver;
 	private emitter: Emitter;
 
-	// HOMEWORK 2 - TODO
 	/**
 	 * This method initializes all variables inside of this AI class, and sets
 	 * up anything we need it do.
@@ -48,6 +47,7 @@ export default class SpaceshipPlayerController implements AI {
 		this.rotationSpeed = 2;
 
 		this.receiver = new Receiver();
+		this.receiver.subscribe(Homework2Event.PLAYER_DAMAGE);
 		this.emitter = new Emitter();
 	}
 
